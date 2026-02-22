@@ -24,14 +24,23 @@ def cancel_class(class_id: str, jwt_token: str):
             # Safely navigate the nested JSON to find the error list
             errors = response_data.get("error", {}).get("errors", [])
 
-            # Check if our specific "already cancelled" error code exists in the list
+            # Check if our specific "already canceled" error code exists in the list
             is_already_cancelled = any(
-                err.get("errorCode") == "class-management-service_2007" or err.get("errorCode") == "class-management-service_2009"
+                err.get("errorCode") == "class-management-service_2007"
+                for err in errors
+            )
+
+            cannot_be_cancelled = any(
+                err.get("errorCode") == "class-management-service_2009"
                 for err in errors
             )
 
             if is_already_cancelled:
-                print(f"Class {class_id} is already cancelled or can't be cancelled. No action needed.")
+                print(f"Class {class_id} is already cancelled. No action needed.")
+
+            elif cannot_be_cancelled:
+                print(f"Class {class_id} cannot be cancelled due to completed roster.")
+
             else:
                 # If it's a 400 but a different error, print standard failure
                 print(f"Failed to cancel class {class_id}: {response.status_code} - {response.text}")
