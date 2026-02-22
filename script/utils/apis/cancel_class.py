@@ -1,9 +1,13 @@
 import json
+import logging
 import requests
 from ..static import ApiEndpoints
 
+# Configure logger for this module
+logger = logging.getLogger(__name__)
 
-def cancel_class(class_id: str, jwt_token: str):
+
+def cancel_class(class_id: str, jwt_token: str) -> bool:
     url = ApiEndpoints.CANCEL_CLASS(class_id)
     headers = ApiEndpoints.get_headers(jwt_token)
 
@@ -13,41 +17,56 @@ def cancel_class(class_id: str, jwt_token: str):
         }
     })
 
-    response = requests.patch(url, headers=headers, data=payload)
+    try:
+        response = requests.patch(url, headers=headers, data=payload, timeout=10)
+        response.raise_for_status()
 
-    if response.status_code == 200:
-        print(f"Class {class_id} cancelled successfully.")
+        if response.status_code == 200:
+            logger.info(f"Class {class_id} cancelled successfully.")
+            return True
 
-    elif response.status_code == 400 or response.status_code == 422:
+    except requests.exceptions.Timeout:
+        logger.error(f"Timeout while cancelling class {class_id}.")
+        return False
+    except requests.exceptions.ConnectionError as e:
+        logger.error(f"Connection error while cancelling class {class_id}: {e}")
+        return False
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Request error for class {class_id}: {e}")
+        return False
+
+    # Handle 400 and 422 responses
+    if response.status_code in (400, 422):
         try:
             response_data = response.json()
-            # Safely navigate the nested JSON to find the error list
             errors = response_data.get("error", {}).get("errors", [])
 
-            # Check if our specific "already canceled" error code exists in the list
-            is_already_cancelled = any(
-                err.get("errorCode") == "class-management-service_2007"
-                for err in errors
-            )
+            if not errors:
+                logger.warning(f"Received {response.status_code} for class {class_id} but no error details provided.")
+                return False
 
-            cannot_be_cancelled = any(
-                err.get("errorCode") == "class-management-service_2009"
-                for err in errors
-            )
+            # Extract first error message for logging
+            error_message = errors[0].get("message", "Unknown error")
+            error_code = errors[0].get("errorCode", "Unknown")
 
-            if is_already_cancelled:
-                print(f"Class {class_id} is already cancelled. No action needed.")
-
-            elif cannot_be_cancelled:
-                print(f"Class {class_id} cannot be cancelled due to completed roster.")
-
+            # Check for specific error codes
+            if error_code == "class-management-service_2007":
+                logger.info(f"Class {class_id}: {error_message} (already cancelled)")
+                return True
+            elif error_code == "class-management-service_2009":
+                logger.warning(f"Class {class_id}: {error_message} (cannot be cancelled)")
+                return False
             else:
-                # If it's a 400 but a different error, print standard failure
-                print(f"Failed to cancel class {class_id}: {response.status_code} - {response.text}")
+                logger.error(f"Failed to cancel class {class_id}: {error_code} - {error_message}")
+                return False
 
-        except ValueError:
-            # Fallback just in case the API returns a 400 without a valid JSON body
-            print(f"Failed to cancel class {class_id}: {response.status_code} - {response.text}")
+        except (ValueError, json.JSONDecodeError):
+            logger.error(f"Failed to parse error response for class {class_id}: {response.status_code} - {response.text}")
+            return False
+        except KeyError as e:
+            logger.error(f"Unexpected error response structure for class {class_id}: {e}")
+            return False
 
     else:
-        print(f"Failed to cancel class {class_id}: {response.status_code} - {response.text}")
+        logger.error(f"Failed to cancel class {class_id}: HTTP {response.status_code} - {response.text}")
+        return False
