@@ -11,11 +11,11 @@ from utils.automation import (
 )
 
 
-SCHEDULE_INTERVAL_SECONDS = 12 * 60 * 60
+SCHEDULE_INTERVAL_SECONDS = 24 * 60 * 60
 
 
-def run_every_12_hours():
-    print("Starting scheduled automation (runs every 12 hours)")
+def run_every_24_hours():
+    print("Starting scheduled automation (runs every 24 hours)")
     run_count = 0
 
     while True:
@@ -81,4 +81,4 @@ def main():
 
 
 if __name__ == "__main__":
-    run_every_12_hours()
+    run_every_24_hours()
