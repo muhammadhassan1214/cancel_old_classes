@@ -65,7 +65,7 @@ def main():
         while True:
             islast_page, classes = get_classes(page_number, jwt_token)
             if classes:
-                print(f"Found {len(classes)} classes with enrolled students.")
+                print(f"Found {len(classes)} classes.")
                 for classId in classes:
                     try:
                         with open(done_file_path, "r", encoding='utf-8') as f:
@@ -80,7 +80,8 @@ def main():
                         f.write(f"{classId}\n")
             else:
                 print(f"No classes with enrolled students found on page {page_number + 1}.")
-
+            print(f"{'-'*50}\nFinished processing page {page_number + 1}.\n{'-'*50}")
+            print(f"{'-'*50}\nTotal processed classes {1000 * (page_number + 1)}.\n{'-'*50}")
             page_number += 1
             time.sleep(random.randint(1, 3))
             if islast_page:
