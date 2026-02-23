@@ -63,7 +63,7 @@ def get_classes(page_number: int, jwt_token: str):
        "page": page_number,
        "pageNumber": page_number,
        "parentId": 18260,
-       "size": 100,
+       "size": 1000,
        "instructorIds": [],
        "classStartDate": date_info.get("four_years_ago_epoch_ms"),
        "classEndDate": date_info.get("yesterday_epoch_ms"),
