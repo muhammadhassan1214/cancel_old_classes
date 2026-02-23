@@ -70,7 +70,6 @@ def main():
             else:
                 print(f"Classes on page {page_number + 1} are already cancelled.")
             print(f"{'-'*50}\nFinished processing page {page_number + 1}.\n{'-'*50}")
-            print(f"{'-'*50}\nTotal processed classes {1000 * (page_number + 1)}.\n{'-'*50}")
             page_number += 1
             time.sleep(random.randint(1, 3))
             if islast_page:

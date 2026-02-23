@@ -14,7 +14,8 @@ def extract_non_cancelled_class_ids(response: dict) -> tuple[bool, list[str]]:
     is_last = pagination.get("isLast", False)
 
     for item in items:
-        if item.get("status") == "CANCELLED":
+        class_status = item.get("status")
+        if class_status == "CANCELLED" or class_status == "COMPLETED":
             continue
         results.append(item.get("classId"))
 
@@ -65,7 +66,7 @@ def get_classes(page_number: int, jwt_token: str):
        "page": page_number,
        "pageNumber": page_number,
        "parentId": 18260,
-       "size": 1000,
+       "size": 100,
        "instructorIds": [],
        "classStartDate": date_info.get("four_years_ago_epoch_ms"),
        "classEndDate": date_info.get("yesterday_epoch_ms"),
