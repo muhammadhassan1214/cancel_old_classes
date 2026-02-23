@@ -4,7 +4,7 @@ from datetime import datetime, time, timedelta
 from ..static import ApiEndpoints
 
 
-def extract_classes_ids(response: dict) -> tuple[bool, list[str]]:
+def extract_non_cancelled_class_ids(response: dict) -> tuple[bool, list[str]]:
     results = []
 
     data = response.get("data", {})
@@ -14,6 +14,8 @@ def extract_classes_ids(response: dict) -> tuple[bool, list[str]]:
     is_last = pagination.get("isLast", False)
 
     for item in items:
+        if item.get("status") == "CANCELLED":
+            continue
         results.append(item.get("classId"))
 
     return is_last, results
@@ -75,7 +77,7 @@ def get_classes(page_number: int, jwt_token: str):
 
     response = requests.post(url, headers=headers, data=payload)
     if response.status_code == 200:
-        return extract_classes_ids(response.json())
+        return extract_non_cancelled_class_ids(response.json())
     else:
         print(f"Failed to get classes on page {page_number}: {response.status_code}")
         return None, []

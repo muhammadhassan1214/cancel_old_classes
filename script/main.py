@@ -12,7 +12,6 @@ from utils.automation import (
 
 
 SCHEDULE_INTERVAL_SECONDS = 12 * 60 * 60
-done_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "utils", "data", "done_classes.txt")
 
 
 def run_every_12_hours():
@@ -65,21 +64,11 @@ def main():
         while True:
             islast_page, classes = get_classes(page_number, jwt_token)
             if classes:
-                print(f"Found {len(classes)} classes.")
+                print(f"Found {len(classes)} classes on page {page_number + 1}.")
                 for classId in classes:
-                    try:
-                        with open(done_file_path, "r", encoding='utf-8') as f:
-                            done_classes = [line.strip() for line in f.read().splitlines() if line.strip()]
-                    except FileNotFoundError:
-                        done_classes = []
-                    if classId in done_classes:
-                        print(f"Skipping already processed class {classId}")
-                        continue
                     cancel_class(classId, jwt_token)
-                    with open(done_file_path, "a", encoding='utf-8') as f:
-                        f.write(f"{classId}\n")
             else:
-                print(f"No classes with enrolled students found on page {page_number + 1}.")
+                print(f"Classes on page {page_number + 1} are already cancelled.")
             print(f"{'-'*50}\nFinished processing page {page_number + 1}.\n{'-'*50}")
             print(f"{'-'*50}\nTotal processed classes {1000 * (page_number + 1)}.\n{'-'*50}")
             page_number += 1
